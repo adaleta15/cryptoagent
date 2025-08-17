@@ -1,13 +1,32 @@
 import os
 import requests
 from dotenv import load_dotenv
+
+# OPTIONAL: support for Streamlit Cloud secrets
+try:
+    import streamlit as st
+    _STREAMLIT = True
+except Exception:
+    _STREAMLIT = False
+
 from openai import OpenAI
 
-# Load env vars
+# Load env vars (for local dev)
 load_dotenv()
-# OPENAI_API_KEY is read automatically from env by the SDK,
-# but we'll also init the client explicitly.
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Read OpenAI key: first from Streamlit secrets, for env var
+if _STREAMLIT and "OPENAI_API_KEY" in st.secrets:
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+else:
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not OPENAI_API_KEY:
+    raise RuntimeError(
+        "OPENAI_API_KEY not set. Add Streamlit Secrets or .env file."
+    )
+
+#  OpenAI client inicialization
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # --- Coin helpers ---
 ALIASES = {
@@ -55,18 +74,12 @@ Examples:
 
 Now respond:
 """
-
-    # Option A: Chat Completions (messages)
     resp = client.chat.completions.create(
-        model="gpt-4o-mini",  # lightweight, cheap, good for classification
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
     )
     return resp.choices[0].message.content.strip()
-
-    # Option B (alternative): Responses API
-    # resp = client.responses.create(model="gpt-4o-mini", input=prompt)
-    # return resp.output_text.strip()
 
 def respond(user_input: str) -> str:
     intent = classify_intent(user_input)
@@ -75,7 +88,6 @@ def respond(user_input: str) -> str:
         coin = intent.split(":", 1)[1]
         return get_price(coin)
     elif intent == "define_term":
-        # Ask the model directly for the definition
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": user_input}],

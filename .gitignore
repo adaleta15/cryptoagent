@@ -1,2 +1,25 @@
+# 🔑 Environment files
 .env
+.streamlit/secrets.toml
+
+# 🐍 Python cache & build
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# 📦 Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# 📂 IDE/Editor settings
+.vscode/
+.idea/
+
+# 📊 Jupyter/Streamlit temp
+.ipynb_checkpoints/
+.streamlit/cache/
